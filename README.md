@@ -17,9 +17,8 @@
 
 ### Claude 앱 (웹·데스크톱)
 
-1. 이 저장소의 [Releases](../../releases)에서 `hwpx-form-preserve.zip`을 내려받습니다.
-   - 저장소 첫 화면의 "Code → Download ZIP"으로 받은 파일은 폴더가 한 겹 더 생겨서 그대로 올리면 인식되지 않을 수 있습니다.
-   - Releases에 zip이 없으면 `hwpx-form-preserve` 폴더만 따로 압축해서 올리세요.
+1. **[hwpx-form-preserve.zip 내려받기](https://github.com/gogh9/hwpx_custom/raw/main/hwpx-form-preserve.zip)**
+   - 저장소 첫 화면의 "Code → Download ZIP"으로 받으면 폴더가 한 겹 더 생겨서 그대로 올리면 인식되지 않을 수 있습니다. 위 링크의 zip을 쓰세요.
 2. Claude의 스킬 설정에서 zip 파일을 업로드합니다.
 
 ### Claude Code
