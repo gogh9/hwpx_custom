@@ -921,7 +921,7 @@ def _body_runs(runs):
 def fit_lines(doc, p, max_tighten=-12, report=True):
     """한 단어(또는 단어 조각)만 다음 줄로 넘어간 줄을 찾아, 그 줄 본문 run의 자간을 1씩 더 줄여 한 줄 덜 쓰게 한다.
     - 한글이 저장한 줄 배치가 있는 원본 문단: 저장 배치로 넘김을 정확히 확인하고, 넘김이 있을 때만 고친다.
-      넘어간 꼬리 폭(+여유 2%)만큼 실제로 줄어들 때까지 자간을 줄인다. 넘김이 없으면 손대지 않는다.
+      문서별로 보정한 폭 모델에서 한 줄 덜 쓰게(마지막 줄 98% 이하) 될 때까지 자간을 줄인다. 넘김이 없으면 손대지 않는다.
     - 새로 쓴 문단: 폭 모델로 줄 나눔을 예측해 넘김(또는 98~101% 경계)이 있으면 고친다.
     - 자간은 각 run의 현재 값에서 더 줄이기만 한다(사용자가 줄여 둔 값을 늘리지 않음). 하한은 max_tighten.
     - 수식·글상자 등 글자처럼 놓인 개체는 저장된 폭으로 계산한다. 머리(1. / • 등) run은 그대로 둔다.
@@ -968,7 +968,6 @@ def fit_lines(doc, p, max_tighten=-12, report=True):
                 continue        # 원본에서 넘김이 없거나, 띄어쓰기 없는 한 덩어리(날짜·시간 등)를 일부러 나눈 경우는 그대로
             target, n_before = len(mine) - 1, len(mine)
             why = f"원본에서 '{tail}' 넘김 → 한 줄로"
-            base_w = text_width(doc, trial(0))
             def ok(dk):
                 tl = wrap(doc, trial(dk), w0, rw)
                 return len(tl) <= target and tl[-1][1] <= FIT_OK and shrink(dk) >= 0.01 * w0
