@@ -35,35 +35,28 @@ Word(.docx)는 docx 스킬을 쓴다.
 6. 원본은 복사해서 작업하고, 결과는 새 이름으로 `/mnt/user-data/outputs/`에 저장한다.
 7. 할 수 없는 작업은 억지로 하지 않고 사용자에게 알린다. 예: 세로 병합이 있는 표의 행 추가, 그림 교체, 머리말·꼬리말·누름틀 편집.
 
-### 결과 파일 이름 규칙
-
-- 사용자가 별도 이름을 지정하지 않으면 결과 파일은 `기본이름(V1).hwpx` 형식으로 저장한다.
-- 같은 작업물을 다시 수정할 때는 기존 파일을 덮어쓰지 않고 `기본이름(V2).hwpx`, `기본이름(V3).hwpx`처럼 버전 번호를 1씩 올린다.
-- 예: `1차시_형성평가_비의성질(V1).hwpx` → `1차시_형성평가_비의성질(V2).hwpx`.
-- 파일을 전달할 때는 실제 저장된 버전과 경로를 확인해 안내한다.
-
-### 머리말·글상자 안전 규칙
-
-- 머리말과 글상자는 여러 `hp:rect`, 내부 문단, 글자 모양이 결합된 영역이므로 전체 텍스트를 하나의 문자열로 덮어쓰지 않는다. 그렇게 하면 글자가 겹치거나 잘리고 번호·제목 위치가 무너질 수 있다.
-- 글상자 문구를 바꿀 때는 구조 출력으로 해당 글상자의 `id`와 내부 문단을 확인하고, 바꾸려는 개별 `hp:t` 또는 개별 내부 문단의 기존 run만 수정한다.
-- 번호, 단원명, 장식 문구가 별도 글상자로 나뉘어 있으면 각각 독립적으로 수정하며 `hp:sz`, `hp:pos`, `hp:drawText`, `hp:linesegarray`와 글자 모양 참조는 유지한다. 글상자 크기·위치·회전·배율은 임의로 바꾸지 않는다.
-- 수정 후에는 원본과 결과의 해당 글상자 구조를 비교하고 Preview 이미지에서 겹침·잘림·흰색 덮어쓰기를 확인한다. 문제가 보이면 원본 글상자 요소를 복원한 뒤 개별 텍스트만 다시 수정한다.
-- 문항 내용을 바꿀 때 기존 수식·답칸·선택지 개체의 개수와 위치가 새 문항 의도에 맞는지 반드시 대조한다. 맞지 않는 개체를 억지로 재활용해 문항을 만들지 말고, 필요하면 기존 문항 범위 안에서 불필요한 개체를 제거하거나 호환되는 문항 블록을 복제해 사용한다.
-- 편집 후에는 문제 문장, 수식, 답칸, 선택지의 시각적 대응을 확인한다. 특히 답칸이 다른 수식과 겹치거나, 계산식이 남아 사고형 문항을 계산형처럼 보이게 하지 않는지 Preview에서 확인한다.
-
 ## 줄 맞춤 규칙
 
-1. **한 단어만 다음 줄로 넘어가면** 그 줄 본문의 자간을 줄여 한 줄로 만든다.
-   - 번호나 기호 머리("1. ", "• ")는 자간 0 그대로 두고 본문 run만 줄인다.
-   - 두 단어 이상이 넘어가는 경우는 그대로 둔다(사용자가 원하면 그때 맞춘다).
-   - `fit_all(d)`가 새로 쓴 문단만 골라 자동으로 처리한다. 예측 폭이 98~101%인 "경계" 줄도 조금 줄여 여유를 둔다.
-   - 자간 -12로도 안 되면 자간을 더 줄이지 말고 문장을 줄인다. 내가 쓴 문장이면 뜻을 유지한 채 직접 줄인다. 사용자가 준 문장이면 줄인 안을 제안한다. 그런 뒤 `fit_all`을 다시 돌린다.
-2. **내어쓰기 + Shift+Enter 목록**: 서식에 "￭ 제목 ↵ • 항목 ↵ • 항목", "1. 제목 ↵ 가. … ↵ 나. …" 같은 문단이 있으면 같은 방식으로 쓴다.
-   - `set_lines(d, p, ["￭ 제목", "• 항목1", "• 항목2"])`를 쓴다.
-   - 둘째 줄부터의 들여쓰기는 문단 모양의 내어쓰기가 맡는다. 공백으로 흉내 내지 않는다.
-3. **긴 문장이 다음 줄로 넘어가면** 내어쓰기 문단 모양이 둘째 줄을 들여 준다. 손으로 줄을 바꾸거나 공백을 넣지 않는다.
+1. **한 단어(또는 단어 조각)만 다음 줄로 넘어가면** 그 줄 본문의 자간을 줄여 한 줄로 만든다.
+   - **새로 쓴 문장**: `fit_all(d)`가 폭 모델로 줄 나눔을 예측해 고친다. 예측 폭이 98~101%인 "경계" 줄도 조금 줄여 여유를 둔다.
+   - **사용자가 올린 원본에 이미 있는 넘김**: 한글이 저장한 줄 배치로 정확히 확인되므로 `fit_all(d)`가 함께 고친다. 넘김이 없는 원본 문단은 건드리지 않는다.
+   - **수식·글상자가 섞인 문장**(수학 학습지의 `4 : 6`, 분수 등)도 대상이다. 개체는 저장된 폭으로 계산한다.
+   - 번호나 기호 머리("1. ", "• ")는 그대로 두고 본문 run만 줄인다.
+   - 자간은 **현재 값에서 더 줄이기만** 한다(사용자가 -5로 줄여 둔 줄이면 -6부터). 하한은 -12다.
+   - 띄어쓰기 없는 한 덩어리(날짜·시간 칸 등)를 일부러 두 줄로 나눈 경우, 짧은 두 단어 이상이 넘어가는 경우는 그대로 둔다(사용자가 원하면 그때 맞춘다).
+   - 문서마다 글꼴이 달라도 맞도록, 그 문서에서 한글이 실제로 나눈 줄 위치로 폭 모델을 자동 보정한다(`calibrate`).
+   - 글자 수를 손으로 세어 추정하지 않는다. 반드시 `fit_all`·`predict` 결과를 근거로 한다.
+2. **-12로도 안 될 때**("필요 자간 약 -15" 같은 추정치가 함께 보고됨):
+   - 내가 쓴 문장이면 뜻을 유지한 채 문장을 줄여 다시 쓰고 `fit_all`을 다시 돌린다.
+   - 사용자가 쓴 원본 문장이면 임의로 고치지 않는다. 추정 자간과 문장 줄이기 안을 함께 제시하고 고르게 한다.
+3. **보고 방식**: 자간을 바꾼 줄마다 "몇 번 문항 / 어느 문장 / 자간 값"을 짧게 알린다. 원본 넘김은 "저장된 배치로 확인됨", 새 문장은 "예측"이라고 구분한다. 마지막에 "한글에서 확인해 주세요. 아직 넘어가는 곳이 있으면 알려 주세요"를 한 줄 덧붙인다.
+4. **내어쓰기 10pt + Shift+Enter**: 제목줄과 하위 항목을 한 문단 안에서 Shift+Enter로 잇는다.
+   - 예: "￭ 제목 ↵ • 항목 ↵ • 항목", "1. 제목 ↵ 가. … ↵ 나. …", "• 내용 ↵ (보충 설명)"
+   - 둘째 줄부터는 문단 모양의 내어쓰기(intent -1000 = 10pt)가 들여 준다.
+   - `set_lines(d, p, ["￭ 제목", "• 항목1", "• 항목2"])`로 쓴다. 들여쓰기를 공백으로 흉내 내지 않는다.
+5. **긴 문장이 다음 줄로 넘어가면** 내어쓰기 문단 모양이 둘째 줄을 안쪽으로 들여 준다. 손으로 줄을 바꾸거나 공백을 넣지 않는다. 문단 모양(paraPrIDRef)을 그대로 두기만 하면 된다.
 
-줄 나눔 예측은 글자 폭 모델로 계산한다. 한글 1em, 공백 0.42em, 영문은 표 값을 쓴다. 함초롬바탕·함초롬돋움 문서의 실제 줄 나눔으로 보정했고, 시험한 문서 100여 문단에서 줄 수가 모두 일치했다. 다른 글꼴(HY헤드라인M, 휴먼명조 등)은 오차가 더 클 수 있다. 저장된 원본으로 정확도를 확인하는 방법은 작업 순서 2단계에 있다. 최종 확인은 한글에서 해야 하므로 결과를 전할 때 한 줄로 알린다.
+줄 나눔 예측은 글자 폭 모델(한글 1em, 공백 0.42em, 영문은 표 값)에 문서별 보정을 더해 계산한다. 시험한 문서 3개(계획서 67문단, 수식이 섞인 평가지 86문단)에서 예측 줄 수가 한글의 실제 줄 수와 모두 일치했다. 그래도 최종 확인은 한글에서 해야 한다.
 
 ## 작업 순서
 
@@ -73,8 +66,7 @@ Word(.docx)는 docx 스킬을 쓴다.
    - 출력 내용: 용지·여백·다단, 최상위 문단 `[n]`, 문단 모양 `p번호`, 글자 모양 `<c번호>`, Shift+Enter `↵`, 표 칸 주소·병합·`★빈칸`, 수식·글상자·그림 id, 사용된 글자·문단 모양 요약(글꼴, 크기, 색, 자간, 장평, 정렬, 줄간격, 여백, 내어쓰기, 줄나눔).
    - `Preview/PrvImage.png`를 unzip해서 Read로 보면 첫 쪽 배치를 확인할 수 있다.
    - 파악한 결과로 정리한다: 어떤 문단이 어떤 역할인지(제목, 대단원 막대, 번호 항목, 표, 문항 등), 문항이나 항목이 어느 문단 범위인지, 채울 빈칸, 바꿀 수식, 손으로 자간을 조정한 곳. 작업이 크면 이 정리를 사용자에게 한두 줄로 확인받는다.
-   - 줄 나눔 예측 정확도 확인: 원본에서 각 문단의 `predict` 결과와 저장된 `hp:linesegarray/hp:lineseg` 개수를 비교한다.
-   - 원본에 이미 한 단어 넘김이 있는지는 `orphans_in_saved(d)`로 찾는다.
+   - 원본에 이미 한 단어 넘김이 있는지는 `orphans_in_saved(d)`로 찾는다(`fit_all`이 함께 고친다).
 3. **편집**
 
 | 작업 | 함수 |
@@ -88,15 +80,17 @@ Word(.docx)는 docx 스킬을 쓴다.
 | 최상위 문단 목록 | `top_paragraphs(d)` (구조 출력의 `[n]` 번호와 같음) |
 | 문항·항목·대단원 복제 | `clone_paragraphs(d, 처음, 끝, after=위치)` (새 문단 목록 반환) |
 | 표 행 추가 | `clone_row(표, 행, d)` (세로 병합 있으면 불가) |
-| **한 단어 넘김 자동 조정** | `fit_all(d)` 또는 `fit_lines(d, 문단)` |
-| 줄 나눔 예측 보기 | `predict(d, 문단)` → `[(줄, [(글자, 폭비율)])]` |
+| **한 단어 넘김 자동 조정**(새 문장 + 원본에 이미 있는 넘김, 수식 섞인 문장 포함) | `fit_all(d)` 또는 `fit_lines(d, 문단)` |
+| 문서별 폭 보정 계수 | `calibrate(d)` (fit_all·predict가 자동 사용) |
+| 줄 나눔 예측 보기 | `predict(d, 문단)` → `[(줄, [(글자, 폭비율)])]` (개체는 ￼) |
+| 원본에 저장된 실제 줄 나눔 | `saved_lines(문단)` |
 | 단어 단위 줄나눔으로 바꾸기 | `p.set("paraPrIDRef", str(clone_parapr(d, p.get("paraPrIDRef"))))` |
 | 저장 | `d.save(결과경로)` |
 
    - 하이퍼링크 같은 필드나 표·수식이 든 문단은 `set_lines`를 쓸 수 없다. `replace_text`로 고친다.
    - 문항 번호가 글상자 안에 있으면 `new[0].find(".//hp:rect/hp:drawText/hp:subList/hp:p", NS)`로 찾는다.
    - 줄간격·여백 같은 문단 모양은 바꾸지 않는다. 사용자가 요청하면 `clone_parapr`로 복제본을 만들어 바꾼다. 이때 `hp:switch` 안의 `hp:case`와 `hp:default` 값을 **둘 다** 고친다.
-4. **줄 맞춤**: 내용을 모두 쓴 뒤 `fit_all(d)`를 실행한다. "문장 다듬기 필요"가 나온 줄은 위 규칙대로 처리하고 `fit_all`을 다시 실행한다.
+4. **줄 맞춤**: 내용을 모두 쓴 뒤 `fit_all(d)`를 실행한다. 원본의 넘김과 새 문장의 넘김을 함께 고친다. "문장 다듬기 필요"가 나오면 위 규칙 2대로 처리하고 `fit_all`을 다시 실행한다. 손대지 않은 원본 문단은 넘김이 없으면 바뀌지 않는다.
 5. **전후 비교**: `verify(원본, 결과)`가 "통과"인지 확인하고, 바뀐 글자 목록이 의도와 같은지 본다. verify는 다음을 점검한다.
    - 기존 모양 정의·그림·바탕쪽 보존(자간 조정용 새 모양만 추가 허용)
    - 없는 모양을 참조하는 곳
@@ -612,7 +606,7 @@ def verify(before_path, after_path):
 
 # ================================================================ 줄 나눔 예측·한 단어 넘김 조정
 # 글자 폭 모델(em): 한글·전각 1.0, 공백 0.42, 영문·숫자는 아래 표.
-# 함초롬바탕 14pt / 함초롬돋움 13pt 문서의 실제 줄 나눔으로 보정함. 오차 약 ±2% (다른 글꼴은 오차가 더 클 수 있음).
+# 함초롬바탕 14pt / 함초롬돋움 13pt 문서의 실제 줄 나눔으로 보정함. 문서별로 calibrate()가 추가 보정.
 _ASCII = dict(zip((chr(c) for c in range(33, 127)), (
     0.29, 0.353, 0.54, 0.517, 0.868, 0.732, 0.184, 0.342, 0.342, 0.449, 0.545, 0.307, 0.325, 0.307, 0.331,
     0.524, 0.443, 0.525, 0.524, 0.522, 0.525, 0.525, 0.516, 0.525, 0.528, 0.307, 0.307, 0.545, 0.545, 0.545,
@@ -643,64 +637,119 @@ def _size_spacing(doc, cid):
     return int(c.get("height")) / 100, int(c.find("hh:spacing", NS).get("hangul"))
 
 
+OBJ_CHAR = "￼"          # 글자처럼 놓인 개체(수식·글상자·그림)를 나타내는 자리 글자
+
+
+def _obj_width(e):
+    """글자처럼 취급(treatAsChar=1)되는 개체의 폭(HWPUNIT). 떠 있는 개체는 0."""
+    pos = e.find("hp:pos", NS)
+    if pos is None or pos.get("treatAsChar") != "1":
+        return 0
+    sz = e.find("hp:sz", NS)
+    om = e.find("hp:outMargin", NS)
+    w = int(sz.get("width")) if sz is not None else 0
+    if om is not None:
+        w += int(om.get("left", 0)) + int(om.get("right", 0))
+    return w
+
+
 def text_width(doc, pieces):
-    """pieces: [(글자, charPrID 또는 (크기pt, 자간%))] -> HWPUNIT 폭 예측."""
+    """pieces: [(글자, charPrID 또는 (크기pt, 자간%) 또는 ("w", 개체폭))] -> HWPUNIT 폭 예측."""
     w = 0.0
     for text, st in pieces:
+        if isinstance(st, tuple) and st and st[0] == "w":
+            w += st[1] * len(text)
+            continue
         size, sp = st if isinstance(st, tuple) else _size_spacing(doc, st)
         w += sum(size * 100 * (char_em(c) + sp / 100) for c in text)
     return w
 
 
+def _col_width(doc, p):
+    """본문 문단이 놓인 단의 폭. 다단 설정(colPr)은 그 문단 앞에서 마지막으로 나온 것을 따른다."""
+    sec = p.getroottree().getroot()
+    pp = sec.find(".//hp:pagePr", NS)
+    mg = pp.find("hp:margin", NS)
+    W = int(pp.get("width")) - int(mg.get("left")) - int(mg.get("right"))
+    top = p
+    while top.getparent() is not None and top.getparent() is not sec:
+        top = top.getparent()
+    cols, gap = 1, 0
+    for q in sec.iterfind("hp:p", NS):
+        for cp in q.iterfind("hp:run/hp:ctrl/hp:colPr", NS):          # 표 칸 안의 다단 설정은 제외
+            cols, gap = int(cp.get("colCount", "1")), int(cp.get("sameGap", "0"))
+        if q is top:
+            break
+    return (W - gap * (cols - 1)) / cols if cols > 1 else W
+
+
 def avail_width(doc, p):
-    """(첫 줄 폭, 둘째 줄부터 폭) HWPUNIT. 표 칸·본문 폭과 문단 여백·내어쓰기를 반영."""
+    """(첫 줄 폭, 둘째 줄부터 폭) HWPUNIT. 표 칸·본문(다단이면 단) 폭과 문단 여백·들여쓰기·내어쓰기를 반영.
+    글상자 안 문단이면 None."""
     par = p.getparent()
     if _ln(par) == "subList" and _ln(par.getparent()) == "tc":
         tc = par.getparent()
         tbl = tc.getparent().getparent()
         src = tc.find("hp:cellMargin", NS) if tc.get("hasMargin") == "1" else tbl.find("hp:inMargin", NS)
         W = int(tc.find("hp:cellSz", NS).get("width")) - int(src.get("left")) - int(src.get("right"))
+    elif _ln(par) == "subList":
+        return None
     else:
-        sec = p.getroottree().getroot()
-        pp = sec.find(".//hp:pagePr", NS)
-        mg = pp.find("hp:margin", NS)
-        W = int(pp.get("width")) - int(mg.get("left")) - int(mg.get("right"))
+        W = _col_width(doc, p)
     W -= 3                                         # 한글 반올림 오차
     pr = doc.header.find(f".//hh:paraPr[@id='{p.get('paraPrIDRef')}']", NS)
     m = pr.find(".//hh:margin", NS)
     g = lambda t: int(m.find(f"hc:{t}", NS).get("value"))
     W -= g("left") + g("right")
     ind = g("intent")
-    return (W, W + ind) if ind < 0 else (W - ind, W)   # 내어쓰기(음수): 둘째 줄부터 좁아짐
+    return (W, W + ind) if ind < 0 else (W - ind, W)   # 내어쓰기(음수): 둘째 줄부터 좁아짐 / 들여쓰기(양수): 첫 줄만 좁아짐
 
 
-def logical_lines(p):
-    """문단을 Shift+Enter(lineBreak) 기준 줄로 나눈다. 각 줄 = [(글자, charPrID)].
-    표·수식·필드 같은 개체가 있으면 None (자동 조정 대상 아님)."""
+def _run_items(r):
+    """run 안의 내용을 순서대로: ('t', 글자) / ('br',) 줄바꿈 / ('obj', 폭) 개체 / ('ctrl',) 폭 없는 컨트롤."""
+    out = []
+    for ch in r:
+        n = _ln(ch)
+        if n == "t":
+            if ch.text:
+                out.append(("t", ch.text))
+            for sub in ch:
+                if _ln(sub) == "lineBreak":
+                    out.append(("br",))
+                elif _ln(sub) == "tab":
+                    out.append(("t", "    "))
+                if sub.tail:
+                    out.append(("t", sub.tail))
+        elif n in OBJ_TAGS:
+            out.append(("obj", _obj_width(ch)))
+        elif n == "ctrl":
+            out.append(("ctrl",))
+    return out
+
+
+def logical_lines(p, allow_objects=False):
+    """문단을 Shift+Enter(lineBreak) 기준 줄로 나눈다. 각 줄 = [(글자, charPrID 또는 ("w", 폭), run)].
+    allow_objects=False면 개체·필드가 있을 때 None (set_lines용)."""
     lines, cur = [], []
     for r in p.iterfind("hp:run", NS):
         cid = r.get("charPrIDRef")
-        for ch in r:
-            n = _ln(ch)
-            if n == "t":
-                if ch.text:
-                    cur.append((ch.text, cid))
-                for sub in ch:
-                    if _ln(sub) == "lineBreak":
-                        lines.append(cur); cur = []
-                    elif _ln(sub) == "tab":
-                        cur.append(("    ", cid))
-                    if sub.tail:
-                        cur.append((sub.tail, cid))
-            elif n in OBJ_TAGS or n == "ctrl":
+        for it in _run_items(r):
+            if it[0] == "t":
+                cur.append((it[1], cid, r))
+            elif it[0] == "br":
+                lines.append(cur); cur = []
+            elif not allow_objects:
                 return None
+            elif it[0] == "obj":
+                cur.append((OBJ_CHAR, ("w", it[1]), r))
     lines.append(cur)
     return lines
 
 
 def wrap(doc, pieces, first_w, rest_w):
-    """한글 '단어 단위 줄나눔'을 흉내 내어 물리적 줄 목록 [(글자, 폭비율)]을 예측."""
-    chars = [(c, cid) for t, cid in pieces for c in t]
+    """한글 '단어 단위 줄나눔'을 흉내 내어 물리적 줄 목록 [(글자, 폭비율)]을 예측.
+    pieces: [(글자, 모양)] 또는 [(글자, 모양, run)]. 개체는 OBJ_CHAR 한 글자로 들어온다."""
+    chars = [(c, pc[1]) for pc in pieces for c in pc[0]]
     out, start, width = [], 0, first_w
     while start < len(chars):
         w, last_sp, i = 0.0, None, start
@@ -715,24 +764,93 @@ def wrap(doc, pieces, first_w, rest_w):
         if i >= len(chars):
             seg = chars[start:]
         else:
-            cut = last_sp + 1 if last_sp is not None and last_sp > start else i
+            cut = last_sp + 1 if last_sp is not None and last_sp > start else max(i, start + 1)
             seg = chars[start:cut]
             i = cut
         txt = "".join(c for c, _ in seg)
-        ww = text_width(doc, [(c, cid) for c, cid in seg]) - \
-            sum(text_width(doc, [(c, cid)]) for c, cid in seg[len(txt.rstrip()):])
+        ww = text_width(doc, seg) - sum(text_width(doc, [x]) for x in seg[len(txt.rstrip()):])
         out.append((txt, ww / width))
         start, width = i, rest_w
     return out or [("", 0.0)]
 
 
 def predict(doc, p):
-    """문단의 줄별 예측. [(줄번호, [(물리줄 글자, 폭비율)])]"""
-    ll = logical_lines(p)
-    if ll is None:
+    """문단의 줄별 예측. [(줄번호, [(물리줄 글자, 폭비율)])]. 개체는 저장된 폭으로 계산(￼로 표시)."""
+    ll = logical_lines(p, allow_objects=True)
+    aw = avail_width(doc, p)
+    if aw is None:
         return None
-    fw, rw = avail_width(doc, p)
+    k_ = calibrate(doc)
+    fw, rw = aw[0] / k_, aw[1] / k_
     return [(k, wrap(doc, pieces, fw if k == 0 else rw, rw)) for k, pieces in enumerate(ll)]
+
+
+def saved_lines(p):
+    """한글이 저장한 줄 배치(lineseg)대로 문단을 물리적 줄로 나눈다. [(Shift+Enter 줄번호, 줄 글자)]
+    개체는 OBJ_CHAR로 표시. 저장 배치가 없으면 None."""
+    segs = p.findall("hp:linesegarray/hp:lineseg", NS)
+    if not segs:
+        return None
+    s = []                                   # 한글 글자 위치 세는 방식: 개체·컨트롤 8칸, 줄바꿈 1칸
+    for r in p.iterfind("hp:run", NS):
+        for it in _run_items(r):
+            if it[0] == "t":
+                s += list(it[1])
+            elif it[0] == "br":
+                s.append("\n")
+            else:
+                s += [OBJ_CHAR if it[0] == "obj" else ""] + [""] * 7
+    pos = [int(x.get("textpos")) for x in segs] + [len(s)]
+    out, k = [], 0
+    for a, b in zip(pos, pos[1:]):
+        if a > 0 and s[a - 1] == "\n":
+            k += 1
+        out.append((k, "".join(s[a:b]).replace("\n", "")))
+    return out
+
+
+def calibrate(doc):
+    """이 문서에서 한글이 실제로 나눈 줄 위치로 폭 보정 계수 k(실제폭/모델폭)를 구한다. 결과는 doc에 저장.
+    한 줄에 들어간 글자 → k 상한, 다음 줄로 밀린 단어 → k 하한. 범위가 맞으면 상한(넓게 보는 쪽)을 쓴다."""
+    if getattr(doc, "_k", None) is not None:
+        return doc._k
+    lo, hi = [], []
+    for _, sec in doc.sections():
+        for p in sec.iter(HP + "p"):
+            sv, aw = saved_lines(p), avail_width(doc, p)
+            if sv is None or aw is None or p.find(".//hp:tab", NS) is not None:
+                continue
+            fw, rw = aw
+            for k, pieces in enumerate(logical_lines(p, allow_objects=True)):
+                chars = [(c, st) for t, st, _ in pieces for c in t]
+                phys = [t for kk, t in sv if kk == k]
+                if "".join(phys) != "".join(c for c, _ in chars):
+                    break
+                pos = 0
+                for i, line in enumerate(phys):
+                    W = fw if (k == 0 and i == 0) else rw
+                    body = chars[pos:pos + len(line.rstrip())]
+                    while body and body[-1][0] in CLOSE_PUNCT:
+                        body = body[:-1]
+                    if any(c != OBJ_CHAR for c, _ in body):
+                        hi.append(W / text_width(doc, body))
+                    if i < len(phys) - 1:
+                        nxt = phys[i + 1]
+                        word = nxt.split(" ")[0] if " " in nxt else nxt
+                        wl = text_width(doc, chars[pos:pos + len(line.rstrip())] +
+                                        chars[pos + len(line):pos + len(line) + len(word)])
+                        if wl > 0:
+                            lo.append(W / wl)
+                    pos += len(line)
+    if not hi:
+        k = 1.0
+    elif not lo:
+        k = min(min(hi), 1.0)              # 밀린 단어 근거가 없으면 기본값을 넘기지 않음
+    else:
+        L, U = max(lo), min(hi)
+        k = U if L <= U else (L + U) / 2
+    doc._k = min(max(k, 0.85), 1.2)
+    return doc._k
 
 
 def _charpr_key(c):
@@ -794,51 +912,95 @@ def set_lines(doc, p, lines, cid=None):
     drop_lineseg(p)
 
 
+def _body_runs(runs):
+    rtext = lambda r: "".join(x[1] for x in _run_items(r) if x[0] == "t")
+    body = [r for r in runs if rtext(r).strip() and not PREFIX_RE.fullmatch(rtext(r))]
+    return body or [r for r in runs if rtext(r).strip()]
+
+
 def fit_lines(doc, p, max_tighten=-12, report=True):
-    """줄마다 줄 나눔을 예측해, 마지막 줄에 한 단어만 넘어가거나(또는 경계라 넘어갈 수 있으면)
-    그 줄 본문 run의 자간을 -1씩 줄여 한 줄 덜 쓰게 만든다. 머리(1. 등) run은 그대로.
-    max_tighten보다 더 줄여야 하면 바꾸지 않고 '문장 다듬기 필요'로 보고한다.
-    한글이 이미 배치해 둔 문단(linesegarray 있음 = 손대지 않은 원본)은 건드리지 않는다."""
-    if p.find("hp:linesegarray", NS) is not None or logical_lines(p) is None:
+    """한 단어(또는 단어 조각)만 다음 줄로 넘어간 줄을 찾아, 그 줄 본문 run의 자간을 1씩 더 줄여 한 줄 덜 쓰게 한다.
+    - 한글이 저장한 줄 배치가 있는 원본 문단: 저장 배치로 넘김을 정확히 확인하고, 넘김이 있을 때만 고친다.
+      넘어간 꼬리 폭(+여유 2%)만큼 실제로 줄어들 때까지 자간을 줄인다. 넘김이 없으면 손대지 않는다.
+    - 새로 쓴 문단: 폭 모델로 줄 나눔을 예측해 넘김(또는 98~101% 경계)이 있으면 고친다.
+    - 자간은 각 run의 현재 값에서 더 줄이기만 한다(사용자가 줄여 둔 값을 늘리지 않음). 하한은 max_tighten.
+    - 수식·글상자 등 글자처럼 놓인 개체는 저장된 폭으로 계산한다. 머리(1. / • 등) run은 그대로 둔다.
+    더 줄여야 하면 바꾸지 않고 '문장 다듬기 필요'로 보고한다."""
+    aw = avail_width(doc, p)
+    if aw is None:
         return []
-    fw, rw = avail_width(doc, p)
-    groups, cur = [], []
-    for r in p.iterfind("hp:run", NS):
-        cur.append(r)
-        if r.find("hp:t/hp:lineBreak", NS) is not None:
-            groups.append(cur); cur = []
-    groups.append(cur)
-    rtext = lambda r: "".join(t.text or "" for t in r.iterfind("hp:t", NS)) + \
-        "".join(x.tail or "" for t in r.iterfind("hp:t", NS) for x in t)
+    saved = saved_lines(p)
+    k_ = calibrate(doc)                       # 이 문서 글꼴에 맞춘 폭 보정
+    fw, rw = aw[0] / k_, aw[1] / k_
+    ll = logical_lines(p, allow_objects=True)
     results = []
-    for k, runs in enumerate(groups):
+    for k, pieces in enumerate(ll):
+        runs = []
+        for _, _, r in pieces:
+            if r not in runs:
+                runs.append(r)
+        body = _body_runs(runs)
+        if not body:
+            continue
+        text = "".join(t for t, _, _ in pieces)
         w0 = fw if k == 0 else rw
-        body = [r for r in runs if not PREFIX_RE.fullmatch(rtext(r))] or runs
-        def pieces(sp=None):
+        cur = {id(r): _size_spacing(doc, r.get("charPrIDRef")) for r in body}
+
+        def trial(dk):
             out = []
-            for r in runs:
-                size, cur_sp = _size_spacing(doc, r.get("charPrIDRef"))
-                out.append((rtext(r), (size, sp if (sp is not None and r in body) else cur_sp)))
+            for t, st, r in pieces:
+                if id(r) in cur and not (isinstance(st, tuple) and st[0] == "w"):
+                    size, sp = cur[id(r)]
+                    out.append((t, (size, sp - dk)))
+                else:
+                    out.append((t, st))
             return out
-        lines = wrap(doc, pieces(), w0, rw)
-        text = "".join(rtext(r) for r in runs)
-        orphan = len(lines) >= 2 and " " not in lines[-1][0].strip() and " " in text.strip()
-        border = FIT_OK < lines[-1][1] <= FIT_OVER
-        if not (orphan or border):
-            continue
-        target = len(lines) - 1 if orphan else len(lines)
+
+        def shrink(dk):   # 자간을 dk만큼 줄였을 때 줄어드는 폭
+            return sum(len(t) * cur[id(r)][0] * dk for t, st, r in pieces
+                       if id(r) in cur and not (isinstance(st, tuple) and st[0] == "w"))
+
+        floor = min(sp for _, sp in cur.values())
+        if saved is not None:
+            mine = [t for kk, t in saved if kk == k]
+            tail = mine[-1].strip() if mine else ""
+            if not (len(mine) >= 2 and tail and " " not in tail and " " in text.strip()):
+                continue        # 원본에서 넘김이 없거나, 띄어쓰기 없는 한 덩어리(날짜·시간 등)를 일부러 나눈 경우는 그대로
+            target, n_before = len(mine) - 1, len(mine)
+            why = f"원본에서 '{tail}' 넘김 → 한 줄로"
+            base_w = text_width(doc, trial(0))
+            def ok(dk):
+                tl = wrap(doc, trial(dk), w0, rw)
+                return len(tl) <= target and tl[-1][1] <= FIT_OK and shrink(dk) >= 0.01 * w0
+        else:
+            lines = wrap(doc, trial(0), w0, rw)
+            orphan = len(lines) >= 2 and " " not in lines[-1][0].strip() and " " in text.strip()
+            border = FIT_OK < lines[-1][1] <= FIT_OVER
+            if not (orphan or border):
+                continue
+            target = len(lines) - 1 if orphan else len(lines)
+            why = "한 단어 넘김 → 한 줄로" if orphan else "경계 → 여유 확보"
+            def ok(dk):
+                tl = wrap(doc, trial(dk), w0, rw)
+                return len(tl) <= target and tl[-1][1] <= FIT_OK
+            n_before = len(lines)
         done = None
-        for sp in range(-1, max_tighten - 1, -1):
-            tl = wrap(doc, pieces(sp), w0, rw)
-            if len(tl) <= target and tl[-1][1] <= FIT_OK:
-                done = sp; break
+        for dk in range(1, floor - max_tighten + 1):
+            if ok(dk):
+                done = dk; break
         if done is None:
-            results.append((text, len(lines), None, f"자간 {max_tighten}로도 부족 - 문장 다듬기 필요"))
+            est = next((dk for dk in range(max(1, floor - max_tighten + 1), 41) if ok(dk)), None)
+            need = f"필요 자간 약 {floor - est}" if est else "자간으로는 불가"
+            results.append((text.replace(OBJ_CHAR, "[개체]"), n_before, None,
+                            f"자간 {max_tighten}까지 줄여도 부족({need}) - 문장 다듬기 필요"))
             continue
+        new_sps = set()
         for r in body:
-            b = base_charpr(doc, r.get("charPrIDRef"))
-            r.set("charPrIDRef", str(charpr_with_spacing(doc, b, done)))
-        results.append((text, len(lines), done, "한 단어 넘김 → 한 줄로" if orphan else "경계 → 여유 확보"))
+            sp = cur[id(r)][1] - done
+            r.set("charPrIDRef", str(charpr_with_spacing(doc, base_charpr(doc, r.get("charPrIDRef")), sp)))
+            new_sps.add(sp)
+        drop_lineseg(p)
+        results.append((text.replace(OBJ_CHAR, "[개체]"), n_before, "/".join(map(str, sorted(new_sps))), why))
     if report:
         for text, n, sp, msg in results:
             print(f"  [{msg}] 자간 {sp} | {n}줄 | {text[:45]}")
@@ -846,7 +1008,7 @@ def fit_lines(doc, p, max_tighten=-12, report=True):
 
 
 def fit_all(doc, max_tighten=-12):
-    """문서 전체 문단에 fit_lines 적용 (개체·필드가 있는 문단은 건너뜀)."""
+    """문서 전체 문단에 fit_lines 적용: 원본의 한 단어 넘김(저장 배치로 확인)과 새로 쓴 문단 모두."""
     out = []
     for _, sec in doc.sections():
         for p in list(sec.iter(HP + "p")):
